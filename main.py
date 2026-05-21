@@ -31,6 +31,13 @@ def get_size_buckets(size_bytes):
         if low_range <= size_bytes < high_range:
             return category
 
+# create scan for specific file
+# "folder" is folder path user wants to look at
+# "sort_by" is whether to sort by type, size or both
+def organize_file(folder, sort_by):
 
 
-# create scan for file directory
+
+
+
+# argparse to identify which file directory to look
