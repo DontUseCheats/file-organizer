@@ -1,12 +1,12 @@
-import os
 import shutil
 import json
+import argparse
 from pathlib import Path
 
 # create a categories Dict which contains all filetypes
 FILES_CATEGORIES = {
     "Images": {".jpg", ".jpeg", ".png", ".gif", ".webp"},
-    "Videos": {".mp4", ".mov", ".avi", "mkv"},
+    "Videos": {".mp4", ".mov", ".avi", ".mkv"},
     "Audio": {".mp3", ".wav", ".flac", ".aac"},
     "Documents": {".pdf", ".doc", ".docx", ".txt"},
     "Archives": {".zip", ".tar", ".gz", ".rar"}
@@ -26,7 +26,7 @@ def get_category(file_type):
     for category, extensions in FILES_CATEGORIES.items():
         if file_type in extensions:
             return category
-        return "Other"
+    return "Other"
 
 def get_size_bucket(size_bytes):
     for category, low_range, high_range in SIZE_BUCKETS:
@@ -60,11 +60,35 @@ def organize_file(folder, sort_by):
             shutil.move(str(file), str(destination)) # moves file to according destination
             moves.append({"from": str(file), "to": str(destination)})
 
-            log_path = folder / ".organizer_log.json"
-            with open(log_path, "w") as f:
-                json.dump(moves, f)
+    log_path = folder / ".organizer_log.json"
+    with open(log_path, "w") as f:
+        json.dump(moves, f)
 
-
-
+def undo(folder):
+    folder = Path(folder)
+    log_path = folder / ".organizer_log.json"
+    
+    with open(log_path, "r") as f:
+        moves = json.load(f)
+    
+    for move in reversed(moves):
+        shutil.move(move["to"], move["from"])
+    
+    log_path.unlink()
 
 # argparse to identify which file directory to look
+def main():
+    parser = argparse.ArgumentParser(description="Organize files by type and size.")
+    
+    parser.add_argument("folder", help="Path to the folder you want to organize")
+    parser.add_argument("--sort-by", choices=["type", "size", "both"], default="both")
+    parser.add_argument("--undo", action="store_true")
+    
+    args = parser.parse_args()
+    
+    if args.undo:
+        undo(args.folder)
+    else:
+        organize_file(args.folder, args.sort_by)
+
+main()
